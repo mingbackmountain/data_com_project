@@ -1,0 +1,402 @@
+//Thanakorn Pasangthien 6088109
+import java.util.ArrayList;
+import java.util.Random;
+import java.util.Scanner;
+import java.util.zip.CRC32;
+
+public class Data_com_project {
+	
+	private static ArrayList<Integer> unreliable_transmission(ArrayList<Integer> in_frame,int p) {
+		
+		ArrayList<Integer> Corrupted_data = (ArrayList<Integer>) in_frame.clone();
+		
+		Random rand = new Random();
+		
+		//position is random with probability of 1/p
+		int corrupt_position = rand.nextInt(p);
+		
+		for(int i = 0; i<Corrupted_data.size(); i++) {
+			if(i==corrupt_position && Corrupted_data.get(i) == 0) {
+				Corrupted_data.remove(i);
+				Corrupted_data.add(i, 1);
+			} else if(i==corrupt_position && Corrupted_data.get(i) == 1) {
+				Corrupted_data.remove(i);
+				Corrupted_data.add(i, 0);
+			}
+		}
+		return Corrupted_data;
+		
+	}
+	
+	private static ArrayList<Integer> parity_gen(ArrayList<Integer> dataword, String parity_type,int size){
+		ArrayList<Integer> parity_word = (ArrayList<Integer>) dataword.clone();
+		int[][] parity_word_2d = new int[size][size];
+		
+	    int sum = 0;
+		switch (parity_type) {
+		case "even":
+			if(size == 0) {
+				for(int i =0; i<parity_word.size();i++) {
+				  sum += parity_word.get(i);
+				}
+				if(sum%2 == 0) {
+					parity_word.add(0);
+				}else {
+					parity_word.add(1);
+				}
+			}
+			break;
+		case "odd":
+			if(size == 0) {
+			   for(int i =0; i<parity_word.size();i++) {
+				  sum += parity_word.get(i);
+				}
+			   if(sum%2 != 0) {
+					parity_word.add(0);
+				}else {
+					parity_word.add(1);
+				}
+			}
+			break;
+		case "2d-even":
+			if(parity_word.size() != size*size) {
+				System.out.println("The dataword size is not compatible with matrix size");
+			}else {
+				Object[] data_list = parity_word.toArray();
+				int count = 0;
+				for(int i=0; i<size; i++) {
+					for(int j=0; j<size; j++) {
+						if(count == data_list.length) break;
+						parity_word_2d[i][j] = (int) data_list[count];
+						System.out.print(parity_word_2d[i][j]+"|");
+						count++;
+					}
+					System.out.println();
+				}
+			}
+			break;
+		case "2d-odd":
+			if(parity_word.size() != size*size) {
+				System.out.println("The dataword size is not compatible with matrix size");
+			}else {
+				Object[] data_list = parity_word.toArray();
+				
+				int count = 0;
+				for(int i=0; i<size; i++) {
+					for(int j=0; j<size; j++) {
+						if(count == data_list.length) break;
+						parity_word_2d[i][j] = (int) data_list[count];
+						System.out.print(parity_word_2d[i][j]+"|");
+						count++;
+					}
+					System.out.println();
+				}	
+			}
+			break;
+		default:
+			System.out.println("parity_type is not compatible");
+			break;
+		}
+		return parity_word;
+	}
+	
+	private static void parity_checker(ArrayList<Integer> dataword, String parity_type,int size) {
+		ArrayList<Integer> parity_word = (ArrayList<Integer>) dataword.clone();
+	    int sum = 0;
+	    switch (parity_type) {
+		case "even":
+			if(size == 0) {
+				for(int i =0; i<parity_word.size();i++) {
+					 sum += parity_word.get(i);
+				}
+				if(sum%2 == 0) {
+					System.out.println("No Error for this dataword");
+				}else {
+					System.out.println("Error for this dataword");
+				}
+			}
+			break;
+		case "odd":
+			if(size == 0) {
+				for(int i =0; i<parity_word.size();i++) {
+					 sum += parity_word.get(i);
+				}
+				if(sum%2 != 0) {
+					System.out.println("No Error for this dataword");
+				}else {
+					System.out.println("Error for this dataword");
+				}
+			}
+			break;
+		
+		case "2d-even":
+			if(parity_word.size() != size*size) {
+				System.out.println("The dataword size is not compatible with matrix size");
+			}
+			
+			break;
+		case "2d-odd":
+			if(parity_word.size() != size*size) {
+				System.out.println("The dataword size is not compatible with matrix size");
+			}
+			
+			break;
+
+		default:
+			System.out.println("parity_type is not compatible");
+			break;
+		}
+	}
+	
+	//helper function for crc
+	static int xor(int a, int b) {
+		if(a == b) {
+			return 0;
+		}
+		return 1;
+	}
+	
+	static int[] divide(int old_data[],int divisor[]) {
+		int remainder[];
+		int data[] = new int[old_data.length+divisor.length];
+		System.arraycopy(old_data, 0, data, 0, old_data.length);
+		
+		remainder = new int[divisor.length];
+		System.arraycopy(data, 0, remainder, 0, divisor.length);
+		
+		for(int i = 0; i<old_data.length; i++) {
+		
+			if(remainder[0] == 1) {
+				for(int j=1; j<divisor.length;j++) {
+					remainder[j-1] = xor(remainder[j],divisor[j]);
+					
+				}
+			}else {
+				for(int j=1; j<divisor.length;j++) {
+					remainder[j-1] = xor(remainder[j],0);
+				}
+			}
+			remainder[divisor.length-1] = data[i+divisor.length];
+		}
+		return remainder;
+	}
+	
+	
+	
+	private static int[] CRC_gen(ArrayList<Integer> dataword, int divisor[]) {
+		ArrayList<Integer> input_data = (ArrayList<Integer>) dataword.clone();
+		
+		int data[] = new int[input_data.size()];
+		for(int i = 0;i<input_data.size();i++) {
+			data[i] = input_data.get(i);
+		}
+		 
+		int remainder [] = divide(data, divisor);
+		
+		int[] sent_data = new int[data.length + remainder.length -1];
+		System.arraycopy(data, 0, sent_data, 0, data.length);
+		System.arraycopy(remainder, 0, sent_data, data.length, remainder.length - 1);
+		return sent_data;
+	}
+	
+	private static void CRC_checker(int[] dataword, int[] divisor) {
+		int remainder [] = divide(dataword,divisor);
+		for(int i=0;i<remainder.length;i++) {
+			if(remainder[i] != 0) {
+				System.out.println("Error for this dataword");
+				return;
+			}
+		}
+		System.out.println("No Error");
+	}
+	
+
+	private static String Checksum_gen(String dataword, int word_size) {
+	
+		
+		
+		return dataword;
+	}
+	
+	private static void Checksum_checker(String dataword, int word_size, int num_blocks) {
+		
+	}
+	
+	//helper function for hammingCode
+	static int getParity(int list[],int power) {
+		int parity = 0;
+		for(int i=0; i<list.length;i++) {
+			if(list[i] != 2) {
+				int k = i+1;
+				String s = Integer.toBinaryString(k);
+				int x = ((Integer.parseInt(s))/((int) Math.pow(10, power)))%10;
+				if(x == 1) {
+					if(list[i] == 1) {
+						parity = (parity+1)%2;
+					}
+				}
+			}
+		}
+		
+		
+		return parity;
+	}
+	
+	private static int[]  HammingCode_gen(int[] dataword) {
+		int[] hamming_list;
+		int i=0,parity_count =0,j=0,k=0;
+		while(i<dataword.length) {
+			if(Math.pow(2, parity_count) == i+parity_count+1) {
+				parity_count++;
+			}else {
+				i++;
+			}
+		}
+		hamming_list = new int[dataword.length + parity_count];
+		
+		for(i=1; i<hamming_list.length;i++) {
+			if(Math.pow(2, j) == i) {
+				hamming_list[i-1] = 2;
+				j++;
+			}
+			else {
+				hamming_list[k+j] = dataword[k++];
+			}
+		}
+		
+		
+		
+		for(i=0;i<parity_count;i++) {
+			hamming_list[((int)Math.pow(2, i))-1] = getParity(hamming_list,i);
+			
+		}
+		
+		
+		return hamming_list;
+	}
+	
+	private static void HammingCode_checker(int[] dataword, int parity_count) {
+		int power;
+		int parity[] = new int[parity_count];
+		
+		String syndrome = new String();
+		
+		for(power=0;power<parity_count;power++) {
+			for(int i=0; i<dataword.length;i++) {
+				int k = i+1;
+				String s = Integer.toBinaryString(k);
+				int bit = ((Integer.parseInt(s))/((int) Math.pow(10, power)))%10;
+				
+				if(bit==1) {
+					if(dataword[i] == 1) {
+						parity[power] = (parity[power]+1)%2;
+					}
+				}
+			}
+			syndrome = parity[power] + syndrome;
+		}
+		System.out.println(syndrome);
+		
+		int error_location = Integer.parseInt(syndrome,2);
+		if(error_location != 0) {
+			System.out.println("Error is at location"+error_location);
+			dataword[error_location -1] = (dataword[error_location-1]+1)%2;
+			System.out.println("Corrected code is:");
+			for(int i=0; i<dataword.length;i++) {
+				System.out.println(dataword[dataword.length-i-1]);
+			}
+			System.out.println();
+		}else {
+			System.out.println("There is no error in the received data");
+		}
+	}
+	
+	public static void main(String[] args) {
+		
+		ArrayList<Integer> Input_data = new ArrayList<Integer>();
+		Scanner sc = new Scanner(System.in);
+		
+		//Generate original data
+		System.out.print("Please enter your data size:");
+		int size = sc.nextInt();
+		System.out.println("==============================");
+		Random rand = new Random();
+		for(int i =0; i<size; i++) {
+			int rand_data = rand.nextInt(2);
+			Input_data.add(rand_data);
+		}
+		
+		System.out.print("The orginal data = " + Input_data.toString()+"\n");
+		System.out.println("==============================");
+		
+		//Even Parity
+		System.out.println("EVEN_PARITY CASE");
+		System.out.println("==============================");
+		ArrayList<Integer> even_parity = parity_gen(Input_data, "even", 0);
+		//Even Parity Checker
+		System.out.println("even_parity_sent: "+ even_parity.toString());
+		System.out.println("even_parity_recieve: "+ unreliable_transmission(even_parity, size).toString());
+		parity_checker(even_parity, "even", 0);
+		
+		//Odd Parity
+		System.out.println("ODD_PARITY CASE");
+		System.out.println("==============================");
+		ArrayList<Integer> odd_parity = parity_gen(Input_data, "odd", 0);
+		//Odd Parity Checker
+		System.out.println("odd_parity_sent: "+ odd_parity.toString());
+		System.out.println("odd_parity_recieve: "+ unreliable_transmission(odd_parity, size).toString());
+		parity_checker(odd_parity, "odd", 0);
+		
+		//2d Parity EVEN
+		System.out.println("EVEN_PARITY_2D CASE");
+		System.out.println("==============================");
+		ArrayList<Integer> even_2d = parity_gen(Input_data, "2d-even", 3);
+		//2d Parity ODD
+		System.out.println("ODD_PARITY_2D CASE");
+		System.out.println("==============================");
+		ArrayList<Integer> odd_2d = parity_gen(Input_data, "2d-odd", 3);
+		//CRC
+		System.out.println("CRC CASE");
+		System.out.println("==============================");
+		int [] divisor = {1,0,0,0,0,0,1,1,1};
+		int[] sender = CRC_gen(Input_data,divisor);
+		System.out.print("sender = ");
+		for(int i =0;i<sender.length;i++) {
+			System.out.print(sender[i]);
+		}
+		System.out.println();
+		CRC_checker(sender, divisor);
+		
+		int[] sender_corrupted = {0,0,1,1,0,1,1,0,1,0,1,1,1,0,1,0}; 
+		System.out.print("sender_corrupted = ");
+		for(int i =0;i<sender_corrupted.length;i++) {
+			System.out.print(sender_corrupted[i]);
+		}
+		System.out.println();
+		CRC_checker(sender_corrupted, divisor);
+		
+		//Checksum
+		System.out.println("Checksum CASE");
+		System.out.println("==============================");
+	
+		
+	
+		
+		//Hamming Code
+		System.out.println("HammingCode CASE");
+		System.out.println("==============================");
+		int[] raw_input = new int[Input_data.size()];
+		for(int i =0;i<raw_input.length;i++) {
+			raw_input[i] = Input_data.get(i);
+		}
+		System.out.println(Input_data.toString());
+		int[] sender_hamming = HammingCode_gen(raw_input);
+		System.out.print("hamming_sender = ");
+		for(int i =0;i<sender_hamming.length;i++) {
+			System.out.print(sender_hamming[i]);
+		}
+		System.out.println();
+		HammingCode_checker(sender_hamming, 4);
+		
+	}
+}

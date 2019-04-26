@@ -1,0 +1,266 @@
+//Thanakorn Pasangthien 6088109
+import java.util.ArrayList;
+import java.util.Random;
+import java.util.Scanner;
+import java.util.zip.CRC32;
+
+public class Data_com_project {
+	
+	
+	
+	
+	
+	
+	
+	private static void parity2d_gen(ArrayList<Integer> input_data, String type) {
+		int count = 0;
+		int more = 1, cap=0,q; 
+		for(int i=0; i<more;i++) {
+			if(i*i == input_data.size()) {
+				cap = i;
+				break;
+			}
+			more++;
+		}
+		
+		int top = (cap +1)*cap;
+		int increase = cap+1;
+		
+		for(int i =0; i<top; i=i+increase) {
+			for(int j=i; j<cap;j++) {
+				if(input_data.get(i) == 1) {count++;}
+			}
+			//If it's not the last position
+			if(cap!=top-1) {
+				//It doesn't matter what we add here, we just need to increase 1 space in ArrayList
+				input_data.add(0);
+				for(q=input_data.size()-1;q>cap;q--) {
+					input_data.set(q, input_data.get(q-1));
+				}
+				if(count%2==0) {
+					//even 2d parity
+					if(type=="even") {input_data.set(q, 0);}
+					//odd 2d parity
+					else{input_data.set(q, 1);}
+				}
+				else {
+					//even 2d parity
+					if(type=="even") {input_data.set(q, 1);}
+					//odd 2d parity
+					else{input_data.set(q, 0);}
+				}
+			}
+			else {
+				if(count%2==0) {
+					//even 2d parity
+					if(type=="even") {input_data.add(0);}
+					//odd 2d parity
+					else{input_data.add(1);}
+				}
+				else {
+					//even 2d parity
+					if(type=="even") {input_data.add(1);}
+					//odd 2d parity
+					else{input_data.add(0);}
+				}
+			}
+			count=0;
+			cap=cap+increase;
+		}
+		
+		//vertical checking
+		for(int i=0;i<increase;i++) {
+			for(int j=i;j<input_data.size()-1;j=j+increase) {
+				if(input_data.get(j)==1) {count++;}
+			}
+			if(count%2==0) {
+				//even 2d parity
+				if(type=="even") {input_data.add(0);}
+				//odd 2d parity
+				else {input_data.add(1);}		
+			}
+			else {
+				//even 2d parity
+				if(type=="even") {input_data.add(1);}
+				//odd 2d parity
+				else {input_data.add(0);}
+			}
+			count=0;
+		}
+		//show
+		for(int i=0;i<input_data.size();i++) {
+				
+				System.out.printf(" %d", input_data.get(i));
+		}
+		System.out.println();
+	}
+	
+	private static String[] parity2d_checker(String[] dataword, String type,int wordsize) {
+		return dataword;
+		
+	}
+	
+	
+	
+
+	private static int Checksum_gen(int[] dataword) {
+		int checksum,sum=0,i;
+		for(i =0;i<dataword.length;i++) {
+			sum += dataword[i];
+		}
+		checksum = ~sum;
+		
+		return checksum;
+	}
+	
+	private static int Checksum_checker(int[] dataword, int old_check) {
+		int checksum,sum=0,i;
+		for( i=0;i<dataword.length;i++) {
+			 sum += dataword[i];
+		}
+		sum += old_check;
+		checksum = ~sum;
+		return checksum;
+	}
+	
+	//helper function for hammingCode
+	static int getParity(int list[],int power) {
+		int parity = 0;
+		for(int i=0; i<list.length;i++) {
+			if(list[i] != 2) {
+				int k = i+1;
+				String s = Integer.toBinaryString(k);
+				int x = ((Integer.parseInt(s))/((int) Math.pow(10, power)))%10;
+				if(x == 1) {
+					if(list[i] == 1) {
+						parity = (parity+1)%2;
+					}
+				}
+			}
+		}
+		
+		
+		return parity;
+	}
+	
+	private static int[]  HammingCode_gen(int[] dataword) {
+		int[] hamming_list;
+		int i=0,parity_count =0,j=0,k=0;
+		while(i<dataword.length) {
+			if(Math.pow(2, parity_count) == i+parity_count+1) {
+				parity_count++;
+			}else {
+				i++;
+			}
+		}
+		hamming_list = new int[dataword.length + parity_count];
+		
+		for(i=1; i<hamming_list.length;i++) {
+			if(Math.pow(2, j) == i) {
+				hamming_list[i-1] = 2;
+				j++;
+			}
+			else {
+				hamming_list[k+j] = dataword[k++];
+			}
+		}
+		for(i=0;i<parity_count;i++) {
+			hamming_list[((int)Math.pow(2, i))-1] = getParity(hamming_list,i);
+			
+		}
+		return hamming_list;
+	}
+	
+	private static void HammingCode_checker(int[] dataword, int parity_count) {
+		int power;
+		int parity[] = new int[parity_count];
+		
+		String syndrome = new String();
+		
+		for(power=0;power<parity_count;power++) {
+			for(int i=0; i<dataword.length;i++) {
+				int k = i+1;
+				String s = Integer.toBinaryString(k);
+				int bit = ((Integer.parseInt(s))/((int) Math.pow(10, power)))%10;
+				
+				if(bit==1) {
+					if(dataword[i] == 1) {
+						parity[power] = (parity[power]+1)%2;
+					}
+				}
+			}
+			syndrome = parity[power] + syndrome;
+		}
+		
+		int error_location = Integer.parseInt(syndrome,2);
+		if(error_location != 0) {
+			System.out.println("Error is at location: "+error_location);
+			dataword[error_location -1] = (dataword[error_location-1]+1)%2;
+		}else {
+			System.out.println("There is no error in the received data");
+		}
+	}
+	
+	public static void main(String[] args) {
+		
+		
+		
+		//CRC
+		System.out.println("CRC CASE");
+		System.out.println("==============================");
+		int [] divisor = {1,0,0,0,0,0,1,1,1};
+		int[] sender = CRC_gen(Input_data,divisor);
+		System.out.print("sender = ");
+		for(int i =0;i<sender.length;i++) {
+			System.out.print(sender[i]);
+		}
+		System.out.println();
+		CRC_checker(sender, divisor);
+		
+		int[] sender_corrupted = {0,0,1,1,0,1,1,0,1,0,1,1,1,0,1,0}; 
+		System.out.print("sender_corrupted = ");
+		for(int i =0;i<sender_corrupted.length;i++) {
+			System.out.print(sender_corrupted[i]);
+		}
+		System.out.println();
+		CRC_checker(sender_corrupted, divisor);
+		
+		//Checksum
+		System.out.println("Checksum CASE");
+		System.out.println("==============================");
+		System.out.println(Input_data.toString());
+		int[] data = new int[size];
+		System.out.println("Please enter input data: ");
+		for(int i=0; i<2;i++) {
+			data[i] = sc.nextInt();
+		}
+		int checksum_sender = Checksum_gen(data);
+		System.out.println("Checksum sender = "+ checksum_sender);
+		int checksum_receiver = Checksum_checker(data, checksum_sender);
+		System.out.println("Checksum receiver = "+ checksum_receiver);
+		if(checksum_receiver == 0) {
+			System.out.println("No error");
+		}else {
+			System.out.println("There is an error");
+		}
+		//Hamming Code
+		System.out.println("HammingCode CASE");
+		System.out.println("==============================");
+		int[] raw_input = {1, 0, 1, 0, 0, 0, 0, 0};
+		
+		int[] sender_hamming = HammingCode_gen(raw_input);
+		System.out.print("hamming_sender = ");
+		for(int i =0;i<sender_hamming.length;i++) {
+			System.out.print(sender_hamming[i]);
+		}
+		System.out.println();
+		HammingCode_checker(sender_hamming, 4);
+		int[] sender_hamming_corrupted = {1,0,1,1,0,1,0,1,0,0,0,0};
+		System.out.print("hamming_sender_corrupted = ");
+		for(int i =0;i<sender_hamming_corrupted.length;i++) {
+			System.out.print(sender_hamming_corrupted[i]);
+		}
+		System.out.println();
+		HammingCode_checker(sender_hamming_corrupted, 4);
+	}
+}

@@ -1,0 +1,138 @@
+import java.util.ArrayList;
+import java.util.Random;
+import java.util.Scanner;
+
+public class Parity {
+	
+	public static ArrayList<Integer> unreliable_transmission(ArrayList<Integer> in_frame,int p) {
+		
+		ArrayList<Integer> Corrupted_data = (ArrayList<Integer>) in_frame.clone();
+		
+		Random rand = new Random();
+		
+		//position is random with probability of 1/p
+		int corrupt_position = rand.nextInt(p);
+		
+		for(int i = 0; i<Corrupted_data.size(); i++) {
+			if(i==corrupt_position && Corrupted_data.get(i) == 0) {
+				Corrupted_data.remove(i);
+				Corrupted_data.add(i, 1);
+			} else if(i==corrupt_position && Corrupted_data.get(i) == 1) {
+				Corrupted_data.remove(i);
+				Corrupted_data.add(i, 0);
+			}
+		}
+		return Corrupted_data;
+		
+	}
+	
+	
+	public static ArrayList<Integer> parity_gen(ArrayList<Integer> dataword, String parity_type,int size){
+		ArrayList<Integer> parity_word = (ArrayList<Integer>) dataword.clone();
+		int[][] parity_word_2d = new int[size][size];
+		
+	    int sum = 0;
+		switch (parity_type) {
+		case "even":
+			if(size == 0) {
+				for(int i =0; i<parity_word.size();i++) {
+				  sum += parity_word.get(i);
+				}
+				if(sum%2 == 0) {
+					parity_word.add(0);
+				}else {
+					parity_word.add(1);
+				}
+			}
+			break;
+		case "odd":
+			if(size == 0) {
+			   for(int i =0; i<parity_word.size();i++) {
+				  sum += parity_word.get(i);
+				}
+			   if(sum%2 != 0) {
+					parity_word.add(0);
+				}else {
+					parity_word.add(1);
+				}
+			}
+			break;
+		default:
+			System.out.println("parity_type is not compatible");
+			break;
+		}
+		return parity_word;
+	}
+	
+	public static void parity_checker(ArrayList<Integer> dataword, String parity_type,int size) {
+		ArrayList<Integer> parity_word = (ArrayList<Integer>) dataword.clone();
+	    int sum = 0;
+	    switch (parity_type) {
+		case "even":
+			if(size == 0) {
+				for(int i =0; i<parity_word.size();i++) {
+					 sum += parity_word.get(i);
+				}
+				if(sum%2 == 0) {
+					System.out.println("No Error for this dataword");
+				}else {
+					System.out.println("Error for this dataword");
+				}
+			}
+			break;
+		case "odd":
+			if(size == 0) {
+				for(int i =0; i<parity_word.size();i++) {
+					 sum += parity_word.get(i);
+				}
+				if(sum%2 != 0) {
+					System.out.println("No Error for this dataword");
+				}else {
+					System.out.println("Error for this dataword");
+				}
+			}
+			break;
+		default:
+			System.out.println("parity_type is not compatible");
+			break;
+		}
+	}
+	
+	public static void main(String[] args) {
+		ArrayList<Integer> Input_data = new ArrayList<Integer>();
+		Scanner sc = new Scanner(System.in);
+		
+		//Generate original data
+		System.out.print("Please enter your data size:");
+		int size = sc.nextInt();
+		System.out.println("==============================");
+		Random rand = new Random();
+		for(int i =0; i<size; i++) {
+			int rand_data = rand.nextInt(2);
+			Input_data.add(rand_data);
+		}
+		
+		System.out.print("The orginal data = " + Input_data.toString()+"\n");
+		System.out.println("==============================");
+		
+		//Even Parity
+				System.out.println("EVEN_PARITY CASE");
+				System.out.println("==============================");
+				ArrayList<Integer> even_parity = parity_gen(Input_data, "even", 0);
+				//Even Parity Checker
+				System.out.println("even_parity_sent: "+ even_parity.toString());
+				System.out.println("even_parity_recieve: "+ unreliable_transmission(even_parity, size).toString());
+				parity_checker(even_parity, "even", 0);
+				
+				//Odd Parity
+				System.out.println("ODD_PARITY CASE");
+				System.out.println("==============================");
+				ArrayList<Integer> odd_parity = parity_gen(Input_data, "odd", 0);
+				//Odd Parity Checker
+				System.out.println("odd_parity_sent: "+ odd_parity.toString());
+				System.out.println("odd_parity_recieve: "+ unreliable_transmission(odd_parity, size).toString());
+				parity_checker(odd_parity, "odd", 0);
+	}
+}
+
+

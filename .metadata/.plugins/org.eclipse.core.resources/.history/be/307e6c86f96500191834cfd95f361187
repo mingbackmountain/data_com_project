@@ -1,0 +1,684 @@
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Random;
+import java.util.Scanner;
+
+public class communication {
+	//This is a divisor for crc
+	static ArrayList<Integer> divisor = new ArrayList<Integer>();
+	//Only use size2 for the size of divisor(crc), blocksize(checksum).
+	static int size2=0;
+	
+	public static void main(String[] args) {
+		//Creating psuedo random data
+		ArrayList<Integer> data = new ArrayList<Integer>();
+		Random rand = new Random(); 
+		int size = rand.nextInt(9)+1;
+		//input for checking method
+		System.out.printf("plese choose the checking method from this table\n");
+		System.out.printf("You'll only have to enter the size of dataline you want. The program will random the bit content inside.\n");
+		System.out.printf("0 : parity bit - even\n");
+		System.out.printf("1 : parity bit - odd\n");
+		System.out.printf("2 : parity bit - 2d array\n");
+		System.out.printf("3 : CRC\n");
+		System.out.printf("4 : checksum\n");
+		System.out.printf("5 : hamming code\n");
+		Scanner scan = new Scanner(System.in);
+		int input = scan.nextInt();
+		if(input==0 || input==1) {
+			for(int i=0;i<1;i++) {
+				System.out.printf("Plese enter the size of data line you wish to sent. NOTE: must be >=9\n");
+				size = scan.nextInt();
+				if(size<9) {i--;}
+			}	
+		}
+		//needs to change size for 2d array, in this case I'll set it to 3X3
+		if(input==2) {
+			System.out.printf("Plese enter the size of array you want. The array will be that size^2\n");
+			size = scan.nextInt();
+			size = size*size;
+		}
+		//////////////////////////////////////////////////////////////////////////
+		if(input==3) {
+			for(int i=0;i<1;i++) {
+				System.out.printf("Plese enter the size of data line you wish to sent. NOTE: must be >=3\n");
+				size = scan.nextInt();
+				if(size<3) {i--;}
+			}	
+			for(int i=0;i<1;i++) {
+				System.out.printf("Plese enter the size of divider. NOTE: must be < than the data size\n");
+				size2 = scan.nextInt();
+				if(size2>=size || size2<=1) {i--;}
+			}
+		}
+		//////////////////////////////////////////////////////////////////////////
+		if(input==4) {
+			for(int i=0;i<1;i++) {
+				System.out.printf("Plese enter the size of divider. NOTE: Must be divisible by your next input of block size\n");
+				size = scan.nextInt();
+				System.out.printf("Plese enter the size for each blockcode\n");
+				size2 = scan.nextInt();
+				if(size%size2==1) {i--;}
+			}
+		}
+		//////////////////////////////////////////////////////////////////////////
+		if(input==5) {
+			for(int i=0;i<1;i++) {
+				System.out.printf("Plese enter the size of data line you wish to sent. NOTE: must be >=2\n");
+				size = scan.nextInt();
+				if(size<2) {i--;}
+			}
+			//Because we need to add in extra checking bit, we loop to find the size after we added in checking bit in 1 by 1
+			for(int i=1;i<=size;i=i*2) {
+				if(size>=i) {
+					size++;
+				}
+			}
+		}
+		////////////////////////////////////////////////////////////////////////////
+		//Assign value to data
+		for(int i=0;i<size;i++) {
+			int b = rand.nextInt(2);
+			if(i==0) {data.add(1);}
+			else {data.add(b);}
+		}
+		System.out.println("Data sent");
+		int count=0;
+		//paritybit
+		/////////////////////////////////////////////////////////////////////////////
+		//even
+		if(input==0) {
+			for(int i=0;i<data.size();i++) {
+				if(data.get(i)==1) {count++;}
+			}
+			if(count%2==0) {data.add(0);}
+			else {data.add(1);}
+			//System.out.printf("%d\n",data.size());
+			//checker
+			for(int i=0;i<data.size();i++) {
+				if(i==data.size()-1) {
+					System.out.printf(" [%d]", data.get(i));
+				}
+				else {
+					System.out.printf(" %d", data.get(i));
+				}
+			}
+			noisegenerator(data,input);
+		}
+		////////////////////////////////////////////////////////////////////////////////	
+		//odd
+		else if(input==1) {
+			for(int i=0;i<data.size();i++) {
+				if(data.get(i)==1) {count++;}
+			}
+			if(count%2==1) {data.add(0);}
+			else {data.add(1);}
+			//System.out.printf("%d\n",data.size());
+			//checker
+			for(int i=0;i<data.size();i++) {
+				if(i==data.size()-1) {
+					System.out.printf(" [%d]", data.get(i));
+				}
+				else {
+					System.out.printf(" %d", data.get(i));
+				}
+							
+			}
+			noisegenerator(data,input);
+		}
+		////////////////////////////////////////////////////////////////////////////////
+		//2d array
+		//In 2d array instead of turning it into an actual 2d array, I turned it into a complicated for loop to check a line of ArrayList
+		else if(input==2) {
+			int more = 1,cap=0,q;
+			//FInd root without going into double sqrt
+			for(int i=0;i<more;i++) {
+				if(i*i==data.size()) {
+					cap=i;
+					break;
+				}
+				more++;
+			}
+			//cap should be 3 at this point if the input is 3.
+			// horizonal checking
+			int top = (cap+1)*cap;
+			//top should give 4 when the input is 3
+			int increase = cap+1; 
+			//increase will be 4 is the input is 3
+			for(int i=0;i<top;i=i+increase) {
+				for(int j=i;j<cap;j++) {
+					if(data.get(j)==1) {count++;}
+				}
+				//If it's not the last position
+				if(cap!=top-1) {
+					//It doesn't matter what we add here, we just need to increase 1 space in ArrayList
+					data.add(0);
+					for(q=data.size()-1;q>cap;q--) {
+						data.set(q, data.get(q-1));
+					}
+					if(count%2==0) {data.set(q, 0);}
+					else {data.set(q, 1);}
+				}
+				else {
+					if(count%2==0) {data.add(0);}
+					else {data.add(1);}
+				}
+				count=0;
+				cap=cap+increase;
+			}
+			//vertical checking
+			for(int i=0;i<increase;i++) {
+				for(int j=i;j<data.size()-1;j=j+increase) {
+					if(data.get(j)==1) {count++;}
+				}
+				if(count%2==0) {data.add(0);}
+				else {data.add(1);}
+				count=0;
+			}
+			//checker
+			for(int i=0;i<data.size();i++) {
+					if(i%increase==0) {
+						System.out.printf("\n");
+					}
+					System.out.printf(" %d", data.get(i));
+			}
+			noisegenerator(data,input);
+		}			
+		///////////////////////////////////////////////////////////////////
+		//CRC
+		if(input==3) {
+			//Assign value to divisor, at this point we only have the data
+			for(int i=0;i<size2;i++) {
+				int b = rand.nextInt(2);
+				if(i==0) {divisor.add(1);}
+				else {divisor.add(b);}
+			}
+			//show
+			System.out.printf("The initial data\n");
+			for(int i=0;i<data.size();i++) {
+				System.out.printf("%d", data.get(i));
+			}
+			System.out.printf("\nThe divisor\n");
+			for(int i=0;i<divisor.size();i++) {
+				System.out.printf("%d", divisor.get(i));
+			}
+			//DIVIDE
+			ArrayList<Integer> divided = new ArrayList<Integer>();
+			//"found" signals that the divisor should all be 0.
+			//"first" signals that the position the loop is pointing to is the first point in that position's divisor
+			//"limit" is a +1 growing rate parameter to limit the size divisor the loop could check for. 
+			int found=0,first=0,limit=0;
+			//Assign value to divided
+			for(int i=0;i<divisor.size();i++) {
+				if(i==0) {divided.add(-1);}
+				else if((divisor.get(i)+data.get(i))%2==1) {divided.add(1);}
+				else {divided.add(0);}
+			}
+			//DIVISION
+			for(int i=divisor.size();i<data.size()+divisor.size()-1;i++) {
+				if(i<data.size()) {divided.add(data.get(i));}
+				else if(i>=data.size()) {divided.add(0);}
+				for(int j=0;j<divided.size();j++) {
+					if(divided.get(j)!=-1) {
+						if(limit==0 && divided.get(j)==0) {
+							found=1;
+							first=1;
+							limit++;
+						}
+						if((divided.get(j)+divisor.get(limit))%2==1 && found!=1) {
+							divided.set(j, 1);
+							if(limit==0) {first=1;}
+							limit++;
+						}
+						else if((divided.get(j)+divisor.get(limit))%2==0 && found!=1){
+							divided.set(j, 0);
+							if(limit==0) {first=1;}
+							limit++;
+						}
+						//After all of that if the first position of divided is 0 then it'll be cut out.
+						if(first==1){
+							divided.set(j, -1);
+							first=0;
+						}
+					}
+				}
+				limit=0;
+				found=0;
+			}
+			//show data 
+			System.out.printf("\nadjusted data\n");
+			for(int i=0;i<data.size();i++) {
+				System.out.printf("%d", data.get(i));
+			}
+			//Adding divided value, show the adjusted data
+			for(int i=0;i<divided.size();i++) {
+				if(divided.get(i)!=-1) {
+					data.add(divided.get(i));
+					System.out.printf("[%d]", divided.get(i));
+				}
+			}
+			System.out.printf("\n");
+			noisegenerator(data,input);
+		}
+		///////////////////////////////////////////////////////////////////
+		//checksum
+		if(input==4) {
+			//show
+			System.out.printf("\n");
+			for(int i=0;i<data.size();i++) {
+				System.out.printf("%d", data.get(i));
+			}
+			ArrayList<Integer> backward = new ArrayList<Integer>();
+			int sum=0,total=0,multiplyer=1;
+			count=0;
+			for(int i=data.size()-1;i>-1;i--) {
+				backward.add(data.get(i));
+			}
+			for(int i=0;i<backward.size();i=i+size2) {
+				for(int j=i;j<i+size2;j++) {
+					if(backward.get(j)==1) {
+						sum = sum+multiplyer;
+					}
+					multiplyer=multiplyer*2;
+				}
+				total = total+sum;
+				sum=0;
+				multiplyer=1;
+			}
+			for(int i=0;i<size2*2;i++) {
+				multiplyer = multiplyer*2;
+			}
+			//multiply by 2 1 extra time from the above loop, so we need to divide 2 once.
+			multiplyer = multiplyer/2;
+			ArrayList<Integer> checksum = new ArrayList<Integer>();
+			for(int i=0;i<size2*2;i++) {
+				if(total>=multiplyer) {
+					checksum.add(1);
+					total=total-multiplyer;
+				}
+				else {checksum.add(0);}
+				multiplyer=multiplyer/2;
+			}
+			ArrayList<Integer> wrappedsum = new ArrayList<Integer>();
+			//This loop already complements the wrappedsum in the process
+			for(int i=0;i<size2;i++) {
+				if((checksum.get(i) + checksum.get(i+size2))%2==1) {
+					wrappedsum.add(0);
+				}
+				else {wrappedsum.add(1);}
+			}
+			for(int i=0;i<wrappedsum.size();i++) {
+				data.add(wrappedsum.get(i));
+			}
+			//show
+			for(int i=0;i<wrappedsum.size();i++) {
+				System.out.printf("[%d]", wrappedsum.get(i));
+			}
+			noisegenerator(data,input);
+		}
+		///////////////////////////////////////////////////////////////////
+		//hamming code
+		if(input==5) {
+			for(int i=1;i<data.size();i=i*2) {
+				data.set(i-1, -1);
+			}
+			int pos=0;
+			//Runs for which r(n) position in hamming code
+			for(int i=1;i<data.size();i=i*2) {
+				//Runs for which position
+				for(int j=i-1;j<data.size();j=j+(i*2)) {
+					//Runs for the amount of pixels in r
+					for(int q=0;q<i;q++) {
+						pos = j+q;
+						if(pos>=data.size()) {break;}
+						if(data.get(pos)==1) {count++;}
+					}	
+					if(pos>=data.size()) {break;}
+				}
+				if(count%2==1) {data.set(i-1,1);}
+				else {data.set(i-1, 0);}
+				count=0;
+			}
+			//show
+			//print gets set to 0 if another print option is prefered.
+			int print=1;
+			for(int i=0;i<data.size();i++) {
+				for(int j=1;j<data.size();j=j*2) {
+					if(j-1==i) {
+						System.out.printf("[%d]", data.get(i));
+						print=0;
+					}
+				}
+				if(print==1) {
+					System.out.printf("%d", data.get(i));
+				}
+				print=1;
+			}
+			System.out.printf("\n\n");
+			for(int i=0;i<data.size();i++) {
+				System.out.print(data.get(i));
+			}
+			System.out.printf("\n");
+			for(int i=0;i<data.size();i++) {
+				System.out.printf("|");
+			}
+			noisegenerator(data,input);
+		}
+		///////////////////////////////////////////////////////////////////
+	}
+
+	public static void noisegenerator(ArrayList<Integer> data, int input) {
+		Random rand = new Random();
+		// 1/5 chance in each bit of the data can be disrupted by random noise.
+		for(int i=0;i<data.size();i++) {
+			int possibility = rand.nextInt(5);
+			if(possibility==0) {
+				if(data.get(i)==0) {
+					data.set(i, 1);
+				}
+				else {
+					data.set(i, 0);
+				}
+				//We only need 1 error for 2d parrity
+				if(input==2 || input==5) {break;}
+			}
+		}
+		///////////////////////////////////////////////////////////////////
+		if(input==0 || input==1 || input==2) {
+			paritybit(data,input);
+		}
+		if(input==3) {crc(data,input);}
+		if(input==4) {checksum(data,input);}
+		if(input==5) {hamming(data,input);}
+		///////////////////////////////////////////////////////////////////
+	}
+	
+	public static void paritybit(ArrayList<Integer> data, int input){
+		int count=0;
+		System.out.printf("\n");
+		//even
+		if(input==0) {
+			for(int i=0;i<data.size();i++) {
+				if(data.get(i)==1) {count++;}
+			}
+			for(int i=0;i<data.size();i++) {
+				System.out.printf(" |");
+				if(i==data.size()-1) {
+					System.out.printf("\n");
+				}
+			}
+			for(int i=0;i<data.size();i++) {
+				System.out.printf(" %d", data.get(i));
+			}
+			if(count%2==0) {
+				System.out.println("\nDidn't detect any error through even parity bit checking");
+			}
+			else {
+				System.out.println("\nError detected");
+			}
+		}
+		//odd
+		else if(input==1) {
+			for(int i=0;i<data.size();i++) {
+				if(data.get(i)==1) {count++;}
+			}
+			for(int i=0;i<data.size();i++) {
+				System.out.printf(" |");
+				if(i==data.size()-1) {
+					System.out.printf("\n");
+				}
+			}
+			for(int i=0;i<data.size();i++) {
+				System.out.printf(" %d", data.get(i));
+			}
+			if(count%2==1) {
+				System.out.println("\nDidn't detect any error through even parity bit checking");
+			}
+			else {
+				System.out.println("\nError detected");
+			}
+		}
+		//2d parity
+		else if(input==2) {
+			int cap=0,row=0,col=0,more=1;
+			//FInd root without going into double sqrt
+			for(int i=0;i<more;i++) {
+				if(i*i==data.size()) {
+					cap=i;
+					break;
+				}
+				more++;
+			}
+			int[][] arr = new int[cap][cap]; 
+			int pos=0;
+			//assign value
+			for(int i=0;i<cap;i++) {
+				for(int j=0;j<cap;j++) {
+					arr[i][j] = data.get(pos);
+				pos++;
+				}
+			}
+			//check horizonally
+			for(int i=0;i<cap;i++) {
+				for(int j=0;j<cap;j++) {
+					if(arr[i][j]==1){count++;}
+				}
+				if(count%2==1) {
+					row=i;
+					break;
+				}
+			}
+			count=0;
+			//check vertically
+			for(int i=0;i<cap;i++) {
+				for(int j=0;j<cap;j++) {
+					if(arr[j][i]==1) {count++;}
+				}
+				if(count%2==1) {
+					col=i;
+					break;
+				}
+			}
+			//show
+			System.out.printf(" Position of error detected : row %d ", row);
+			System.out.printf("col %d", col);
+			System.out.printf("\n");
+			for(int i=0;i<cap;i++) {
+				for(int j=0;j<cap;j++) {
+					if(i==row && j==col) {
+						System.out.printf("[%d]", arr[i][j]);
+					}
+					else {
+						System.out.printf(" %d", arr[i][j]);
+					}
+				}
+				System.out.printf("\n");
+			}
+		}
+	}
+	///////////////////////////////////////////////////////////////////
+	public static void crc(ArrayList<Integer> data, int input) {
+		//show
+		for(int i=0;i<data.size();i++) {
+			System.out.printf("|");
+		}
+		System.out.printf("\n");
+		for(int i=0;i<data.size();i++) {
+			System.out.printf("%d", data.get(i));
+		}
+		System.out.printf("\nThe received divisor\n");
+		for(int i=0;i<divisor.size();i++) {
+			System.out.printf("%d", divisor.get(i));
+		}
+		//DIVIDE
+		ArrayList<Integer> divided = new ArrayList<Integer>();
+		//"found" signals that the divisor should all be 0.
+		//"first" signals that the position the loop is pointing to is the first point in that position's divisor
+		//"limit" is a +1 growing rate parameter to limit the size divisor the loop could check for. 
+		int found=0,first=0,limit=0;
+		//Assign value to divided
+		for(int i=0;i<divisor.size();i++) {
+			if(i==0) {divided.add(-1);}
+			else if((divisor.get(i)+data.get(i))%2==1) {divided.add(1);}
+			else {divided.add(0);}
+		}
+		//DIVISION
+		for(int i=divisor.size();i<data.size();i++) {
+			divided.add(data.get(i));
+			for(int j=0;j<divided.size();j++) {
+				if(divided.get(j)!=-1) {
+					if(limit==0 && divided.get(j)==0) {
+						found=1;
+						first=1;
+						limit++;
+					}
+					if((divided.get(j)+divisor.get(limit))%2==1 && found!=1) {
+						divided.set(j, 1);
+						if(limit==0) {first=1;}
+						limit++;
+					}
+					else if((divided.get(j)+divisor.get(limit))%2==0 && found!=1){
+						divided.set(j, 0);
+						if(limit==0) {first=1;}
+						limit++;
+					}
+					//After all of that if the first position of divided is 0 then it'll be cut out.
+					if(first==1){
+						divided.set(j, -1);
+						first=0;
+					}
+				}
+			}
+			limit=0;
+			found=0;
+		}
+		//output
+		//This found has changed its usefulness to a checker for 1 in the remainder
+		found=0;
+		System.out.printf("\nThe reaminder from checking process\n");
+		for(int i=0;i<divided.size();i++) {
+			if(divided.get(i)==1) {
+				found=1;
+			}
+			if(divided.get(i)!=-1) {
+				System.out.printf("%d",divided.get(i));
+			}
+		}
+		if(found==1) {
+			System.out.printf("\nDATA IS CORRUPTED");
+		}
+		else {
+			System.out.printf("\nTHE DATA WAS NOT INTERRUPTED");
+		}
+	}
+	///////////////////////////////////////////////////////////////////
+	public static void checksum(ArrayList<Integer> data, int input) {
+		//show
+		System.out.printf("\n");
+		for(int i=0;i<data.size();i++) {
+			System.out.printf("|");
+		}
+		System.out.printf("\n");
+		for(int i=0;i<data.size();i++) {
+			System.out.printf("%d", data.get(i));
+		}
+		ArrayList<Integer> backward = new ArrayList<Integer>();
+		int sum=0,total=0,multiplyer=1;
+		int count=0;
+		for(int i=data.size()-1;i>-1;i--) {
+			backward.add(data.get(i));
+		}
+		for(int i=0;i<backward.size();i=i+size2) {
+			for(int j=i;j<i+size2;j++) {
+				if(backward.get(j)==1) {
+					sum = sum+multiplyer;
+				}
+				multiplyer=multiplyer*2;
+			}
+			total = total+sum;
+			sum=0;
+			multiplyer=1;
+		}
+		for(int i=0;i<size2*2;i++) {
+			multiplyer = multiplyer*2;
+		}
+		//multiply by 2 1 extra time from the above loop, so we need to divide 2 once.
+		multiplyer = multiplyer/2;
+		ArrayList<Integer> checksum = new ArrayList<Integer>();
+		for(int i=0;i<size2*2;i++) {
+			if(total>=multiplyer) {
+				checksum.add(1);
+				total=total-multiplyer;
+			}
+			else {checksum.add(0);}
+			multiplyer=multiplyer/2;
+		}
+		ArrayList<Integer> wrappedsum = new ArrayList<Integer>();
+		//This loop already complements the wrappedsum in the process
+		for(int i=0;i<size2;i++) {
+			if((checksum.get(i) + checksum.get(i+size2))%2==1) {
+				wrappedsum.add(0);
+			}
+			else {
+				wrappedsum.add(1);
+			}
+		}
+		//If an error is detected check=1
+		int check=0;
+		System.out.printf("\ncalculated wrappedsum:\n");
+		for(int i=0;i<wrappedsum.size();i++) {
+			System.out.printf("%d", wrappedsum.get(i));
+			if(wrappedsum.get(i)==1) {check=1;}
+		}
+		if(check==1) {
+			System.out.printf("\nERROR DETECTED");
+		}
+		else {
+			System.out.printf("\nNO ERROR DETECTED");
+		}
+	}
+	///////////////////////////////////////////////////////////////////
+	public static void hamming(ArrayList<Integer> data, int input){
+		ArrayList<Integer> value = new ArrayList<Integer>();
+		int count=0,pos=0;
+		//Runs for which r(n) position in hamming code
+		for(int i=1;i<data.size();i=i*2) {
+			//Runs for which position
+			for(int j=i-1;j<data.size();j=j+(i*2)) {
+				//Runs for the amount of pixels in r
+				for(int q=0;q<i;q++) {
+					pos = j+q;
+					if(pos>=data.size()) {break;}
+					if(data.get(pos)==1) {count++;}
+				}	
+				if(pos>=data.size()) {break;}
+			}
+			if(count%2==1) {value.add(1);}
+			else {value.add(0);}
+			count=0;
+		}
+		//show the recieved data
+		System.out.printf("\n");
+		for(int i=0;i<data.size();i++) {
+			System.out.printf("%d", data.get(i));
+		}
+		//show the value
+		System.out.printf("\n error value detected\n");
+		for(int i=0;i<value.size();i++) {
+			System.out.printf("%d", value.get(i));
+		}
+		//show the calculated position
+		pos=1;
+		int output=0;
+		for(int i=0;i<value.size();i++) {
+			if(value.get(i)==1) {
+				output = output+pos;
+			}
+			pos = pos*2;
+		}
+		System.out.printf("\nCorrupted position : %d", output);
+	
+	}
+///////////////////////////////////////////////////////////////////
+}

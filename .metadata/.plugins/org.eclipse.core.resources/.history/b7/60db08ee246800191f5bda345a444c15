@@ -1,0 +1,14 @@
+//Thanakorn Pasangthien 6088109
+import java.util.ArrayList;
+import java.util.Random;
+import java.util.Scanner;
+import java.util.zip.CRC32;
+
+public class Parity_2d {
+	public static void main(String[] args) {
+		
+		
+		
+		
+	}
+}

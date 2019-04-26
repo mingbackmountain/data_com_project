@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring accessors="true" comment="Delete 2 elements from project &apos;data_com&apos;&#x0A;- Original project: &apos;data_com&apos;&#x0A;- Original elements:&#x0A;     data_com/src/data_com&#x0A;     data_com.data_com.java" description="Delete elements" element1="/src&lt;data_com" elements="1" flags="589830" id="org.eclipse.jdt.ui.delete" resources="0" stamp="1555782294630" subPackages="false" version="1.0"/>
+</session>

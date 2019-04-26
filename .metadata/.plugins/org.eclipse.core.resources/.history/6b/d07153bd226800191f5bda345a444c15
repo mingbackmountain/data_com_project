@@ -1,0 +1,119 @@
+//Thanakorn Pasangthien 6088109
+import java.util.ArrayList;
+import java.util.Random;
+import java.util.Scanner;
+import java.util.zip.CRC32;
+
+public class Data_com_project {
+	
+	
+	
+	
+	
+	
+	
+	private static void parity2d_gen(ArrayList<Integer> input_data, String type) {
+		int count = 0;
+		int more = 1, cap=0,q; 
+		for(int i=0; i<more;i++) {
+			if(i*i == input_data.size()) {
+				cap = i;
+				break;
+			}
+			more++;
+		}
+		
+		int top = (cap +1)*cap;
+		int increase = cap+1;
+		
+		for(int i =0; i<top; i=i+increase) {
+			for(int j=i; j<cap;j++) {
+				if(input_data.get(i) == 1) {count++;}
+			}
+			//If it's not the last position
+			if(cap!=top-1) {
+				//It doesn't matter what we add here, we just need to increase 1 space in ArrayList
+				input_data.add(0);
+				for(q=input_data.size()-1;q>cap;q--) {
+					input_data.set(q, input_data.get(q-1));
+				}
+				if(count%2==0) {
+					//even 2d parity
+					if(type=="even") {input_data.set(q, 0);}
+					//odd 2d parity
+					else{input_data.set(q, 1);}
+				}
+				else {
+					//even 2d parity
+					if(type=="even") {input_data.set(q, 1);}
+					//odd 2d parity
+					else{input_data.set(q, 0);}
+				}
+			}
+			else {
+				if(count%2==0) {
+					//even 2d parity
+					if(type=="even") {input_data.add(0);}
+					//odd 2d parity
+					else{input_data.add(1);}
+				}
+				else {
+					//even 2d parity
+					if(type=="even") {input_data.add(1);}
+					//odd 2d parity
+					else{input_data.add(0);}
+				}
+			}
+			count=0;
+			cap=cap+increase;
+		}
+		
+		//vertical checking
+		for(int i=0;i<increase;i++) {
+			for(int j=i;j<input_data.size()-1;j=j+increase) {
+				if(input_data.get(j)==1) {count++;}
+			}
+			if(count%2==0) {
+				//even 2d parity
+				if(type=="even") {input_data.add(0);}
+				//odd 2d parity
+				else {input_data.add(1);}		
+			}
+			else {
+				//even 2d parity
+				if(type=="even") {input_data.add(1);}
+				//odd 2d parity
+				else {input_data.add(0);}
+			}
+			count=0;
+		}
+		//show
+		for(int i=0;i<input_data.size();i++) {
+				
+				System.out.printf(" %d", input_data.get(i));
+		}
+		System.out.println();
+	}
+	
+	private static String[] parity2d_checker(String[] dataword, String type,int wordsize) {
+		return dataword;
+		
+	}
+	
+	
+	
+
+	
+	
+	
+	public static void main(String[] args) {
+		
+		
+		
+
+	
+		
+		
+		
+	}
+}
